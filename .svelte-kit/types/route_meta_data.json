@@ -1,0 +1,22 @@
+{
+	"/": [
+		"src/routes/+page.ts",
+		"src/routes/+layout.ts",
+		"src/routes/+layout.server.ts",
+		"src/routes/+layout.ts",
+		"src/routes/+layout.server.ts"
+	],
+	"/auth/login": [
+		"src/routes/+layout.ts",
+		"src/routes/+layout.server.ts"
+	],
+	"/auth/register": [
+		"src/routes/+layout.ts",
+		"src/routes/+layout.server.ts"
+	],
+	"/courses/[id]": [
+		"src/routes/courses/[id]/+page.ts",
+		"src/routes/+layout.ts",
+		"src/routes/+layout.server.ts"
+	]
+}

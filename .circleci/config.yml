@@ -1,0 +1,87 @@
+version: 2.1
+
+orbs:
+  node: circleci/node@4.7
+
+references:
+  container_defaults: &container_defaults
+    docker:
+      - image: cimg/node:18.16.1
+    parallelism: 1
+    resource_class: large
+    working_directory: ~/loopable-app
+
+  cypress_cache_key: &cypress_cache_key cy-cache-loopable-{{ checksum "yarn.lock" }}
+
+  cache_key: &cache_key cache-loopable-{{ checksum "yarn.lock" }}
+
+  save_deps_cache: &save_deps_cache
+    save_cache:
+      key: *cache_key
+      paths:
+        - ./node_modules
+
+  restore_deps_cache: &restore_deps_cache
+    restore_cache:
+      keys:
+        - *cache_key
+
+jobs:
+  setup:
+    <<: *container_defaults
+    steps:
+      - checkout
+      - *restore_deps_cache
+      - node/install-packages:
+          pkg-manager: yarn
+      - run:
+          name: Install dependencies
+          command: yarn install
+      - *save_deps_cache
+
+  deploy-dev:
+    <<: *container_defaults
+    steps:
+      - checkout
+      - *restore_deps_cache
+      - run:
+          name: Build app
+          command: yarn sst build --stage dev --verbose --to .sst/cdk.out
+      - run:
+          name: Deploy app
+          command: sst deploy --stage dev
+
+  deploy-prod:
+    <<: *container_defaults
+    steps:
+      - checkout
+      - *restore_deps_cache
+      - run:
+          name: Build app
+          command: yarn sst build --stage prod --verbose --to .sst/cdk.out
+      - run:
+          name: Deploy app
+          command: sst deploy --stage prod
+
+workflows:
+  DeployDev:
+    jobs:
+      - setup:
+          filters:
+            branches:
+              only:
+                - dev
+      - deploy-dev:
+          requires:
+            - setup
+
+  DeployProd:
+    jobs:
+      - setup:
+          filters:
+            branches:
+              only:
+                - main
+      - deploy-prod:
+          requires:
+            - setup
